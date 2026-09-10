@@ -1,0 +1,32 @@
+# Segredos — NUNCA versionar
+.env
+.env.*
+!.env.example
+*.key
+config/secrets.toml
+
+# Dados coletados e banco
+var/
+*.db
+*.db-wal
+*.db-shm
+*.csv
+*.xlsx
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Editor / SO
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
