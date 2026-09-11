@@ -21,13 +21,32 @@ pontuação e o dossiê de abordagem. **Não reprojete nada sem ler.**
 ## Estado atual (2026-09-11)
 
 - Spec aprovada. Plano da fatia: `docs/superpowers/specs/2026-09-10-fatia-dia-1.md`
-- **Peça 1 da Fatia Dia 1 pronta e commitada**, com 78 testes passando:
-  `site_fetcher` + `site_classifier` + `site_extracao` + `tracking_detector`.
+- **Fatia Dia 1 completa**: as quatro peças e a linha de comando, com testes.
+  Decisões da peça 3 na emenda de 2026-09-11 do plano da fatia.
 - **Interface adiada** (2026-09-11): o operador recebe os leads pelo CSV até a
-  E7. As regras de tela da spec valem no CSV — ver a emenda da peça 4 e a seção
-  "Interface — adiada", com os pedidos para a E7, no plano da fatia.
-- Próximo: plano de implementação das peças 2, 3 e 4. A peça 2
-  (`places_discovery`) já pode andar — a chave existe.
+  E7. As regras de tela da spec valem no CSV.
+- **Primeira busca real feita** (2026-09-11, salão de beleza, Setor Bueno, 4
+  chamadas): 60 leads. Revelou que um terço dos salões põe Instagram, WhatsApp
+  (direto ou por bit.ly/w.app) ou Trinks no campo "site" do Google — virou
+  `PERFIL_NO_LUGAR_DO_SITE`, T1. Código no branch `fatia-dia-1-pecas-2-3-4`,
+  ainda fora da `main`.
+- Próximo: o Saulo olhar a lista e, se ela convencer, seguir para a E4 — o
+  conjunto de referência rotulado à mão.
+
+### Como rodar uma busca
+
+    .venv\Scripts\python.exe -m discoveryleads buscar --nicho "salão de beleza" --cidade "Setor Bueno, Goiânia" --raio 2000 --max-chamadas 4 --saida leads.csv
+
+`--max-chamadas` é obrigatório: cada requisição ao Google conta, e uma busca usa
+no máximo 4 (o centro da região mais 3 páginas de 20). Os sinais ficam em
+`var/discoveryleads.db`; o CSV sai com `;` e BOM para abrir no Excel.
+
+### Numa segunda máquina
+
+O `.env`, o `.venv/`, o banco (`var/`) e os CSVs não vão para o git, de
+propósito: chave, dependências da máquina e dados de terceiros. Numa máquina
+nova: clonar, `git switch fatia-dia-1-pecas-2-3-4`, criar o venv com Python
+3.13, `pip install -e ".[dev]"` e escrever o `.env` com a `GOOGLE_API_KEY`.
 
 ### Ambiente
 

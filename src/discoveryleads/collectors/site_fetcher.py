@@ -11,6 +11,7 @@ status tiraria da lista leads T1 legitimos.
 """
 
 import socket
+import ssl
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -40,6 +41,7 @@ class RespostaDoSite:
     redirects: int = 0
     tempo_resposta_ms: int = 0
     html: str = ""
+    https_valido: bool | None = None  # None: nem chegou a negociar TLS
     motivo_falha: MotivoDeFalha | None = None
 
 
@@ -61,6 +63,26 @@ def _motivo_da_excecao(erro: Exception) -> MotivoDeFalha:
     if isinstance(erro, httpx.TransportError):
         return MotivoDeFalha.REDE_INDISPONIVEL
     return MotivoDeFalha.RESPOSTA_INVALIDA
+
+
+def certificado_invalido(erro: BaseException) -> bool:
+    """Procura falha de verificacao de certificado na cadeia de excecoes.
+
+    Duas pistas, porque cada uma some num contexto diferente: o tipo
+    `ssl.SSLCertVerificationError` aparece na cadeia real do httpx (medido em
+    expired.badssl.com), e a mensagem do OpenSSL `CERTIFICATE_VERIFY_FAILED`
+    sobrevive quando a cadeia se perde, como sob o respx.
+    """
+    vistos: set[int] = set()
+    atual: BaseException | None = erro
+    while atual is not None and id(atual) not in vistos:
+        if isinstance(atual, ssl.SSLCertVerificationError):
+            return True
+        if "CERTIFICATE_VERIFY_FAILED" in str(atual):
+            return True
+        vistos.add(id(atual))
+        atual = atual.__cause__ or atual.__context__
+    return False
 
 
 def _resolver_dns_de_verdade(host: str) -> bool:
@@ -97,10 +119,14 @@ async def buscar_site(
         ) as cliente:
             resposta = await cliente.get(url)
     except Exception as erro:  # principio 1: nada escapa daqui
-        return RespostaDoSite(
-            tempo_resposta_ms=int((time.monotonic() - comeco) * 1000),
-            motivo_falha=_motivo_da_excecao(erro),
-        )
+        tempo = int((time.monotonic() - comeco) * 1000)
+        if certificado_invalido(erro):
+            return RespostaDoSite(
+                tempo_resposta_ms=tempo,
+                https_valido=False,
+                motivo_falha=MotivoDeFalha.RESPOSTA_INVALIDA,
+            )
+        return RespostaDoSite(tempo_resposta_ms=tempo, motivo_falha=_motivo_da_excecao(erro))
 
     return RespostaDoSite(
         url_final=str(resposta.url),
@@ -108,5 +134,6 @@ async def buscar_site(
         redirects=len(resposta.history),
         tempo_resposta_ms=int((time.monotonic() - comeco) * 1000),
         html=resposta.text,
+        https_valido=str(resposta.url).startswith("https://"),
         motivo_falha=_motivo_do_status(resposta.status_code),
     )

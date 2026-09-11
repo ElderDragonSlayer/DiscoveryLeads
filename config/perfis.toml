@@ -1,0 +1,16 @@
+# Enderecos que o negocio poe no campo "site" do Google sem serem site: perfil
+# de rede social, conversa de WhatsApp, pagina de agendamento de terceiros.
+#
+# Achado na primeira busca real (Setor Bueno, 2026-09-11): 20 dos 60 saloes
+# tinham um destes, e todos sairam como TEM_SITE_PROPRIO. Viram a categoria
+# PERFIL_NO_LUGAR_DO_SITE, faixa T1.
+#
+# O coletor NAO busca estes enderecos: o dominio ja diz o que e, e buscar perfil
+# do Instagram do IP de casa e o risco da secao 14 da spec.
+
+[perfis]
+"instagram.com" = "o perfil do Instagram"
+"facebook.com" = "a página do Facebook"
+"wa.me" = "um link de WhatsApp"
+"api.whatsapp.com" = "um link de WhatsApp"
+"trinks.com" = "a página de agendamento no Trinks"

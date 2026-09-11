@@ -6,11 +6,13 @@ aqui, no fundo, verifica a mesma coisa: qualquer que seja o desastre, sai um
 resultado com motivo em enum, e o programa segue.
 """
 
+import ssl
+
 import httpx
 import pytest
 import respx
 
-from discoveryleads.collectors.site_fetcher import buscar_site
+from discoveryleads.collectors.site_fetcher import buscar_site, certificado_invalido
 from discoveryleads.core.falhas import MotivoDeFalha
 
 
@@ -121,3 +123,67 @@ async def test_status_de_erro_vira_motivo_mas_o_html_continua_disponivel(status,
     assert resultado.motivo_falha is motivo
     assert resultado.http_status == status
     assert "awsli" in resultado.html
+
+
+def test_certificado_invalido_reconhece_a_causa_real_do_ssl():
+    """Formato medido em expired.badssl.com: ConnectError <- ConnectError <-
+    ssl.SSLCertVerificationError."""
+    raiz = ssl.SSLCertVerificationError("certificate verify failed: certificate has expired")
+    meio = httpx.ConnectError("falhou")
+    meio.__cause__ = raiz
+    topo = httpx.ConnectError("falhou")
+    topo.__cause__ = meio
+
+    assert certificado_invalido(topo) is True
+
+
+def test_certificado_invalido_reconhece_pela_mensagem_do_openssl():
+    """Sob respx a cadeia de causas se perde; a mensagem do OpenSSL fica."""
+    erro = httpx.ConnectError("[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed")
+
+    assert certificado_invalido(erro) is True
+
+
+def test_erro_de_conexao_comum_nao_e_certificado():
+    assert certificado_invalido(httpx.ConnectError("connection refused")) is False
+
+
+@respx.mock
+async def test_certificado_invalido_vira_https_invalido_sem_status():
+    respx.get("https://vencido.com.br/").mock(
+        side_effect=httpx.ConnectError("[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed")
+    )
+
+    resultado = await buscar_site("https://vencido.com.br/", resolve_dns=_dns_que_resolve)
+
+    assert resultado.https_valido is False
+    assert resultado.http_status is None
+    assert resultado.motivo_falha is MotivoDeFalha.RESPOSTA_INVALIDA
+
+
+@respx.mock
+async def test_site_que_responde_em_https_tem_https_valido():
+    respx.get("https://salao.com.br/").mock(return_value=httpx.Response(200, html="<html></html>"))
+
+    resultado = await buscar_site("https://salao.com.br/", resolve_dns=_dns_que_resolve)
+
+    assert resultado.https_valido is True
+
+
+@respx.mock
+async def test_site_so_em_http_nao_tem_https_valido():
+    """Sem HTTPS o navegador mostra "Não seguro": defeito vendável, não quebra."""
+    respx.get("http://salao.com.br/").mock(return_value=httpx.Response(200, html="<html></html>"))
+
+    resultado = await buscar_site("http://salao.com.br/", resolve_dns=_dns_que_resolve)
+
+    assert resultado.https_valido is False
+    assert resultado.motivo_falha is None
+
+
+@pytest.mark.live
+async def test_live_certificado_vencido_de_verdade():
+    """Canário da cadeia real de exceções do httpx. Roda com -m live."""
+    resultado = await buscar_site("https://expired.badssl.com/")
+
+    assert resultado.https_valido is False

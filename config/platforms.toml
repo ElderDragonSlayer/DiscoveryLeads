@@ -25,7 +25,9 @@ dominios = ["negocio.site", "business.site"]
 assinaturas = []
 
 [agregador]
-dominios = ["linktr.ee", "beacons.ai", "bio.link", "linkbio.co"]
+# taplink.cc confirmado na primeira busca real (2026-09-11): taplink.cc/cabeleireira,
+# title "Cabeleireira at Taplink".
+dominios = ["linktr.ee", "beacons.ai", "bio.link", "linkbio.co", "taplink.cc"]
 assinaturas = ["assets.production.linktr.ee"]
 
 [canva]

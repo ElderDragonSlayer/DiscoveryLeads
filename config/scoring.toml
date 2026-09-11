@@ -1,0 +1,18 @@
+# Regras de elegibilidade e faixas (secao 6 da spec), com as decisoes de
+# 2026-09-11. Fora do codigo para o operador calibrar sem reprogramar.
+
+[elegibilidade]
+# Construtor em subdominio gratis e "substituto improvisado": a pessoa nem
+# comprou dominio (decisao do Saulo, 2026-09-11). Com dominio proprio e
+# TEM_SITE_PROPRIO. So entram subdominios confirmados em fixture real.
+subdominios_gratis = ["wixsite.com", "myshopify.com", "lojaintegrada.com.br"]
+
+# REDE_FRANQUIA: mesmo telefone ou mesmo nome em pelo menos N place_id da busca.
+franquia_min_ocorrencias = 3
+
+[faixas]
+# Demanda comprovada (secao 6.2).
+demanda_min_avaliacoes = 20
+
+# T0 exige rastreamento PAGO. GA, GTM e heatmap medem, nao provam verba.
+rastreamento_pago = ["meta_pixel", "google_ads", "tiktok_pixel"]
