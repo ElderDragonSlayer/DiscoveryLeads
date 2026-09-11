@@ -231,8 +231,10 @@ escolhido o `app-name` e classificaria a variante B como `proprio`.
 
 ## Perguntas que ficam para a Peça 3 (elegibilidade)
 
-Não são da Peça 1 — o classificador só emite sinal. Registradas para não se
-perderem.
+**Respondidas em 2026-09-11** — ver a emenda da peça 3 no plano da fatia.
+Resumo: (1) construtor só é elegível em subdomínio grátis; (2) a loja suspensa
+é `SITE_QUEBRADO`, porque status de erro só torna elegível; (3) a coluna
+`rastreamento` do CSV diz "nenhum visível no HTML cru", nunca "não anuncia".
 
 1. **`wix` / `wordpress` / `shopify` / `loja_integrada` são elegíveis?** A seção 6.1
    lista como elegíveis apenas `SEM_SITE`, `CANVA`, `AGREGADOR`,
