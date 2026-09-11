@@ -1,0 +1,7 @@
+# Definicao de nicho enquanto a tabela `niches` (secao 4.6) nao existe.
+# A chave e o texto exato passado em --nicho.
+
+["salão de beleza"]
+# FORA_DO_ICP (secao 6.1): quem precisa de site institucional com varias paginas
+# nao e cliente de landing page nesta temporada. Tipos da Tabela A do Places.
+tipos_excluir = ["lawyer", "accounting", "doctor", "hospital"]
