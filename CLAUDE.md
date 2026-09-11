@@ -25,8 +25,13 @@ pontuação e o dossiê de abordagem. **Não reprojete nada sem ler.**
   Decisões da peça 3 na emenda de 2026-09-11 do plano da fatia.
 - **Interface adiada** (2026-09-11): o operador recebe os leads pelo CSV até a
   E7. As regras de tela da spec valem no CSV.
-- Próximo: olhar a primeira lista real (definição de pronto da fatia) e, se ela
-  convencer, seguir para a E4 — o conjunto de referência rotulado à mão.
+- **Primeira busca real feita** (2026-09-11, salão de beleza, Setor Bueno, 4
+  chamadas): 60 leads. Revelou que um terço dos salões põe Instagram, WhatsApp
+  (direto ou por bit.ly/w.app) ou Trinks no campo "site" do Google — virou
+  `PERFIL_NO_LUGAR_DO_SITE`, T1. Código no branch `fatia-dia-1-pecas-2-3-4`,
+  ainda fora da `main`.
+- Próximo: o Saulo olhar a lista e, se ela convencer, seguir para a E4 — o
+  conjunto de referência rotulado à mão.
 
 ### Como rodar uma busca
 
@@ -35,6 +40,13 @@ pontuação e o dossiê de abordagem. **Não reprojete nada sem ler.**
 `--max-chamadas` é obrigatório: cada requisição ao Google conta, e uma busca usa
 no máximo 4 (o centro da região mais 3 páginas de 20). Os sinais ficam em
 `var/discoveryleads.db`; o CSV sai com `;` e BOM para abrir no Excel.
+
+### Numa segunda máquina
+
+O `.env`, o `.venv/`, o banco (`var/`) e os CSVs não vão para o git, de
+propósito: chave, dependências da máquina e dados de terceiros. Numa máquina
+nova: clonar, `git switch fatia-dia-1-pecas-2-3-4`, criar o venv com Python
+3.13, `pip install -e ".[dev]"` e escrever o `.env` com a `GOOGLE_API_KEY`.
 
 ### Ambiente
 

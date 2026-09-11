@@ -60,7 +60,7 @@ def _texto_ou_nada(valor: str | None) -> str | None:
     return valor.strip() or None
 
 
-def _whatsapp_de(url: str) -> tuple[str, str | None] | None:
+def whatsapp_de(url: str) -> tuple[str, str | None] | None:
     """Interpreta uma URL como contato de WhatsApp.
 
     Devolve `(link, telefone_e164_ou_None)`, ou None se a URL nao for um contato
@@ -94,7 +94,7 @@ def _whatsapp_de(url: str) -> tuple[str, str | None] | None:
 def _achar_whatsapp(html: str) -> tuple[str | None, str | None]:
     """Primeiro contato de WhatsApp util, na ordem do documento."""
     for encontrada in PADRAO_URL.finditer(html):
-        achado = _whatsapp_de(encontrada.group())
+        achado = whatsapp_de(encontrada.group())
         if achado is not None:
             return achado
     return (None, None)

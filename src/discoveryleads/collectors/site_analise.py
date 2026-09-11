@@ -138,4 +138,37 @@ async def analisar_site(
         resposta = await buscar(url)
     except Exception:  # buscar_site nao levanta; um buscador injetado pode
         resposta = RespostaDoSite(motivo_falha=MotivoDeFalha.RESPOSTA_INVALIDA)
+
+    no_destino = perfil_no_lugar_do_site(resposta.url_final) if resposta.url_final else None
+    if no_destino is not None:
+        # O endereco do Google redireciona para um perfil: na primeira busca
+        # real, bit.ly e w.app levando ao WhatsApp. Vale o destino — a pagina
+        # do WhatsApp nao e o site do lead, e classifica-la da `proprio`.
+        motivo = resposta.motivo_falha.value if resposta.motivo_falha else None
+        return [
+            Signal(
+                tipo="collector.site_fetcher.failed",
+                valor=motivo,
+                fonte="site",
+                coletor="site_fetcher",
+                versao=VERSAO,
+                observado_em=observado_em,
+            ),
+            Signal(
+                tipo="site.url_final",
+                valor=resposta.url_final,
+                fonte="site",
+                coletor="site_fetcher",
+                versao=VERSAO,
+                observado_em=observado_em,
+            ),
+            Signal(
+                tipo="site.perfil_no_lugar_do_site",
+                valor=no_destino,
+                fonte="site",
+                coletor="site_classifier",
+                versao=VERSAO,
+                observado_em=observado_em,
+            ),
+        ]
     return sinais_da_resposta(url, resposta, observado_em)

@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 from discoveryleads.collectors.site_analise import SINAIS_DE_RASTREAMENTO
+from discoveryleads.collectors.site_extracao import whatsapp_de
 from discoveryleads.core.normalizacao import telefone_e164
 from discoveryleads.core.sinais import Signal
 from discoveryleads.scoring.elegibilidade import Elegibilidade
@@ -107,6 +108,13 @@ def _whatsapp(sinais: dict[str, Signal]) -> tuple[str, str]:
     do_site = _valor(sinais, "site.whatsapp_link")
     if do_site:
         return str(do_site), "site"
+    # O proprio campo "site" do Google pode ser o link — e as vezes e o unico
+    # contato do lead (Casa Z, primeira busca real, sem telefone). O destino
+    # do redirect vem antes da origem, e whatsapp_de descarta `?phone=` vazio.
+    for tipo in ("site.url_final", "places.website_uri"):
+        link = _valor(sinais, tipo)
+        if link and whatsapp_de(str(link)) is not None:
+            return str(link), "link de WhatsApp no Google"
     e164 = telefone_e164(_valor(sinais, "places.telefone"))
     if e164 and _valor(sinais, "telefone.e_movel") is True:
         return f"https://wa.me/{e164.removeprefix('+')}", "telefone do Places, móvel inferido"
