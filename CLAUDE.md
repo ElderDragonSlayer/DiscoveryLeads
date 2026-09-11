@@ -20,8 +20,32 @@ pontuação e o dossiê de abordagem. **Não reprojete nada sem ler.**
 
 ## Estado atual (2026-09-10)
 
-- Spec aprovada. **Nenhum código escrito ainda.**
-- Trabalho imediato: `docs/superpowers/specs/2026-09-10-fatia-dia-1.md`
+- Spec aprovada. Plano da fatia: `docs/superpowers/specs/2026-09-10-fatia-dia-1.md`
+- **Peça 1 da Fatia Dia 1 pronta**, com 50 testes passando:
+  `site_fetcher` + `site_classifier` + `site_extracao` + `tracking_detector`.
+- Próximo: peça 2 (`places_discovery`), que já pode andar — a chave existe.
+
+### Ambiente
+
+Python 3.13 em `.venv/`. Não há `python` no PATH da máquina; use o do venv:
+
+```
+.venv\Scripts\python.exe -m pytest tests/ -q
+```
+
+### Leitura obrigatória antes de mexer no classificador
+
+`docs/superpowers/specs/2026-09-10-spike-s4-e-armadilhas.md` — resposta do spike
+S4 e as **seis armadilhas de falso positivo** medidas em HTML real. Cada uma tem
+um teste que a trava. Não relaxe nenhuma dessas regras sem ler o porquê: três
+delas invertem a faixa de prioridade do lead, e uma delas encheria o topo da
+lista de leads sem verba.
+
+As assinaturas de plataforma estão em `config/platforms.toml`, e **a ordem das
+seções daquele arquivo é a ordem de precedência**.
+
+O que cada fixture é, de onde veio e o que se espera dela está em
+`tests/fixtures/sites/MANIFESTO.toml`, que é a tabela de casos do classificador.
 
 ## Decisões travadas (não reabrir sem motivo novo)
 
@@ -56,18 +80,15 @@ Nicho **salão de beleza**, cidade **Goiânia**.
 
 ## Pendências do Saulo
 
-- [ ] **Chave da Places API (New)** no Google Cloud, com faturamento ativo.
-      Bloqueia as peças 2, 3 e 4 da Fatia Dia 1. A peça 1 anda sem ela.
+- [x] **Chave da Places API (New)** — feita. Peças 2, 3 e 4 desbloqueadas.
+- [ ] **Conjunto de referência rotulado à mão** (etapa E4): ~30 leads reais que
+      ele classifica como valendo ou não uma ligação. É a única fonte de verdade
+      sobre a qualidade da lista, e nenhuma heurística substitui o julgamento
+      dele ali.
 
-Fixtures do classificador **não dependem do Saulo**: a assinatura de plataforma
-independe do nicho — uma página Canva de padaria tem a mesma impressão digital de
-uma de salão. Qualquer página Canva/Linktree real serve, e podem ser obtidas sem
-ajuda dele.
-
-O que só o Saulo pode dar vem depois, na etapa E4: o **conjunto de referência
-rotulado à mão** (~30 leads reais que ele classifica como valendo ou não uma
-ligação). É a única fonte de verdade sobre a qualidade da lista, e nenhuma
-heurística substitui o julgamento dele ali.
+Fixtures do classificador **não dependem do Saulo** e já foram colhidas: treze
+páginas reais em `tests/fixtures/sites/`. A assinatura de plataforma independe do
+nicho — uma página Canva de padaria tem a mesma impressão digital de uma de salão.
 
 ## Convenções
 

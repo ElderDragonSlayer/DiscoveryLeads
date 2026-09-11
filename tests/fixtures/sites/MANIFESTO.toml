@@ -1,0 +1,338 @@
+# Manifesto das fixtures de site
+#
+# Cada entrada e um caso real, baixado com curl e User-Agent de navegador, sem
+# JavaScript — exatamente o que o coletor vai enxergar em producao.
+#
+# Este arquivo e a especificacao do `site_classifier` em forma de dado: a coluna
+# `plataforma_esperada` e o resultado que o teste exige, e `assinatura` e a prova
+# de por que aquele resultado esta certo. Nenhuma expectativa aqui foi suposta —
+# todas sairam de inspecao do HTML baixado.
+#
+# Regravar uma fixture: refazer o curl, conferir http_status/redirects, e
+# atualizar a entrada. Fixture que muda sem o manifesto mudar e teste mentindo.
+
+versao = 1
+coletado_em = "2026-09-10"
+user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
+
+
+# ─────────────────────────────── canva ───────────────────────────────
+
+[[fixture]]
+arquivo = "canva_salao.html"
+origem = "https://vocenosalao.my.canva.site/"
+http_status = 200
+redirects = 0
+plataforma_esperada = "canva"
+assinatura = [
+    "dominio *.my.canva.site",
+    "__canva_website_bootstrap__",
+    "<meta name=\"app-name\" content=\"export_website\">",
+]
+title = "Início"
+viewport_presente = true
+meta_description_presente = false
+whatsapp_link = "https://wa.me/message/VR7BW3RWVSZAE1"
+whatsapp_telefone_extraivel = false          # link de codigo curto, nao tem numero
+instagram = "https://www.instagram.com/studio8__"
+rastreamento = []
+nota = "Salao de beleza real, o proprio nicho da primeira busca. Variante A do Canva."
+
+[[fixture]]
+arquivo = "canva_variante_sem_app_name.html"
+origem = "https://wailantebeauty.my.canva.site/"
+http_status = 200
+redirects = 0
+plataforma_esperada = "canva"
+assinatura = [
+    "dominio *.my.canva.site",
+    "__canva_website_bootstrap__",
+    "window.canva_scriptExecutor",
+]
+title = "Agendamento e informação"
+viewport_presente = true
+meta_description_presente = false            # a tag existe, mas com content="" — ver armadilha 5
+whatsapp_link = "https://wa.me/message/KDN3TYGUWA26I1"
+whatsapp_telefone_extraivel = false
+rastreamento = []
+nota = """
+Variante B do Canva: NAO tem <meta name="app-name" content="export_website">.
+E por isso que a assinatura de HTML precisa ser __canva_website_bootstrap__, que
+e o unico marcador presente nas duas variantes. Se o classificador dependesse do
+app-name, esta pagina cairia em `proprio` e o lead T1 sumiria da lista.
+"""
+
+
+# ───────────────────────────── agregador ─────────────────────────────
+
+[[fixture]]
+arquivo = "agregador_linktree.html"
+origem = "https://linktr.ee/FascinoBeleza"
+http_status = 200
+redirects = 0
+plataforma_esperada = "agregador"
+assinatura = ["dominio linktr.ee", "assets.production.linktr.ee"]
+title = "Fascino Instituto de Beleza Official: Instagram | Linktree"
+viewport_presente = true
+meta_description_presente = true
+whatsapp_link = "https://wa.me/557999015030"
+whatsapp_telefone_extraivel = true
+instagram = "https://instagram.com/fascino.beleza"
+rastreamento = []                            # do lojista: NENHUM. Ver armadilha 1.
+nota = """
+Caso mais perigoso do conjunto. O HTML tem, no __NEXT_DATA__:
+  "facebookPixelId": null      <- campo do lojista, vazio
+  "googleAnalyticsId": null    <- campo do lojista, vazio
+  "tiktokPixelId": null        <- campo do lojista, vazio
+  "metaPixelConsentId": "6StlrDkNFNcBNFbPe7JJRF"    <- constante da Linktree
+  "tiktokPixelConsentId": "1h9aMwwDHM0koRqcj6Qj83"  <- constante da Linktree
+Os dois *ConsentId sao identicos em toda pagina da Linktree. Ver armadilha 1.
+
+Tem tambem "https://api.whatsapp.com/send?phone=" com o valor VAZIO, ao lado do
+wa.me valido. Ver armadilha 4.
+"""
+
+[[fixture]]
+arquivo = "agregador_linktree_com_pixel.html"
+origem = "derivada de agregador_linktree.html"
+derivada = true
+http_status = 200
+redirects = 0
+plataforma_esperada = "agregador"
+assinatura = ["dominio linktr.ee", "assets.production.linktr.ee"]
+rastreamento = ["meta_pixel"]
+nota = """
+NAO E PAGINA COLHIDA. E a fixture real com UM campo trocado:
+
+    "facebookPixelId":null  ->  "facebookPixelId":"100000000000001"
+
+Treze bytes de diferenca, um unico diff. O `metaPixelConsentId` da Linktree fica
+intocado de proposito, para que esta fixture prove as duas coisas ao mesmo tempo:
+o pixel do lojista e detectado E o consentId continua sendo ignorado.
+
+Existe porque o caso maximo T0 da secao 6.2 — Pixel dentro de um agregador — nao
+foi encontrado em nenhuma pagina publica. Na Linktree o pixel exige plano pago, o
+que ja e um dado sobre o tamanho esperado da faixa T0. Sem esta fixture, a
+maneira preguicosa de fugir da armadilha 1 (devolver sempre False para agregador)
+passaria em todos os testes.
+"""
+
+[[fixture]]
+arquivo = "agregador_beacons_bloqueado_403.html"
+origem = "https://beacons.ai/fornecedoresbrasil2025"
+http_status = 403
+redirects = 0
+plataforma_esperada = "agregador"
+assinatura = ["dominio beacons.ai"]
+title = "Just a moment..."                   # desafio do Cloudflare, nao e a pagina
+viewport_presente = true
+meta_description_presente = false
+motivo_falha_esperado = "bloqueado"
+rastreamento = []
+nota = """
+Nao entregou conteudo: e um desafio de Cloudflare. O caso existe para provar que
+a classificacao por dominio sobrevive ao bloqueio — um lead T1 legitimo nao pode
+virar `quebrado` so porque o anti-bot respondeu 403. O sinal de falha e gravado
+ao lado da plataforma, nao no lugar dela.
+"""
+
+
+# ─────────────────────── construtores com dominio ────────────────────
+
+[[fixture]]
+arquivo = "wix_wixsite.html"
+origem = "https://vwcabeloeestetica.wixsite.com/barber"
+http_status = 200
+redirects = 0
+plataforma_esperada = "wix"
+assinatura = ["dominio *.wixsite.com", "static.parastorage.com (237 ocorrencias)"]
+title = "Cabeleireiro | VW Cabelo e Estética | Vila Matilde"
+viewport_presente = true
+meta_description_presente = true
+rastreamento = []
+
+[[fixture]]
+arquivo = "wordpress_com_whatsapp.html"
+origem = "https://www.jacquesjanine.com.br/"
+url_final = "https://jacquesjanine.com.br/"
+http_status = 200
+redirects = 1                                # www -> apex
+plataforma_esperada = "wordpress"
+assinatura = ["/wp-content/ (156 ocorrencias)", "/wp-includes/ (9)"]
+title = "Home - Jacques Janine"
+viewport_presente = true
+meta_description_presente = true
+whatsapp_link = "https://wa.me/+5511966072926"
+whatsapp_telefone_extraivel = true
+rastreamento = ["google_analytics"]
+google_analytics_id = "G-C2BKCGLQ6T"
+nota = "Unico GA4 de verdade do conjunto inteiro. Ver armadilha 2."
+
+[[fixture]]
+arquivo = "wordpress_com_pixel_gtm.html"
+origem = "https://www.wernercoiffeur.com.br/"
+url_final = "https://wernercoiffeur.com.br/"
+http_status = 200
+redirects = 1
+plataforma_esperada = "wordpress"
+assinatura = ["/wp-content/ (131)", "/wp-includes/ (7)"]
+title = "Werner Coiffeur – Beleza, moda e estética para os cabelos das mulheres e homens que desejam o melhor."
+viewport_presente = true
+meta_description_presente = true
+rastreamento = ["meta_pixel", "gtm"]
+eventos_conversao = []                       # so fbq('track', 'PageView', [])
+nota = """
+Fixture mais rica de `tracking.*`: fbq( + connect.facebook.net + gtm.js na mesma
+pagina. E o caso da secao 5 da spec: Pixel presente com `eventos_conversao`
+vazio — paga anuncio e nao mede retorno.
+
+Repare que NAO tem id de GA4 no HTML cru mesmo tendo gtag: o GTM carrega o GA
+depois, no navegador. `tracking.gtm` verdadeiro e `tracking.google_analytics`
+falso e o resultado correto para HTML cru, nao um defeito do detector.
+"""
+
+[[fixture]]
+arquivo = "shopify_ativa.html"
+origem = "https://minhaloja.myshopify.com/"
+http_status = 200
+redirects = 0
+plataforma_esperada = "shopify"
+assinatura = ["dominio *.myshopify.com", "cdn.shopify.com", "Shopify.theme"]
+title = "minhaloja - minhaloja"
+viewport_presente = false                    # defeito vendavel: nao e responsivo
+meta_description_presente = false            # defeito vendavel: SEO
+rastreamento = []
+
+[[fixture]]
+arquivo = "shopify_suspensa_402.html"
+origem = "https://u10pfz-mz.myshopify.com/"
+http_status = 402                            # Payment Required — loja suspensa
+redirects = 0
+plataforma_esperada = "shopify"
+assinatura = ["dominio *.myshopify.com", "cdn.shopify.com"]
+title = "Loja indisponível"
+viewport_presente = true
+meta_description_presente = false
+rastreamento = []
+nota = """
+Caso de precedencia em aberto: assinatura diz `shopify`, HTTP 4xx diz `quebrado`.
+A secao 6.1 da spec nao decide. Registrado como pergunta da Peca 3, nao resolvido
+aqui — a Peca 1 grava os dois sinais (`site.plataforma` e `site.http_status`) e
+deixa a elegibilidade decidir.
+"""
+
+[[fixture]]
+arquivo = "shopify_em_dominio_proprio.html"
+origem = "https://www.hifly.com.br/"
+url_final = "https://hifly.com.br/"
+http_status = 200
+redirects = 1
+plataforma_esperada = "shopify"
+assinatura = ["cdn.shopify.com (9 ocorrencias) em dominio proprio"]
+title = "HIFLY"                              # ver armadilha 3
+viewport_presente = true
+meta_description_presente = true
+rastreamento = []
+nota = """
+Duas armadilhas numa fixture so.
+
+1. Dominio proprio (.com.br) NAO implica `proprio`. A assinatura do construtor
+   vence o dominio. Sem esta regra, toda loja Shopify com dominio proprio some
+   da classificacao correta.
+
+2. O <title> de verdade e "HIFLY", e esta quebrado em tres linhas no <head>.
+   Logo depois vem CINCO <title> em linha unica, todos dentro de <svg> de
+   bandeira de cartao (<title id="pi-american_express">American Express</title>).
+   Extracao por regex orientada a linha perde o primeiro e devolve o segundo:
+   "American Express". Extrair de head > title com parser de arvore.
+"""
+
+[[fixture]]
+arquivo = "loja_integrada_bloqueada_403.html"
+origem = "https://petprodutos.lojaintegrada.com.br/"
+http_status = 403
+redirects = 0
+plataforma_esperada = "loja_integrada"
+assinatura = ["dominio *.lojaintegrada.com.br", "cdn.awsli.com.br"]
+title = "Ops :( Tente novamente"
+viewport_presente = false
+meta_description_presente = false
+motivo_falha_esperado = "bloqueado"
+rastreamento = []
+nota = """
+Pagina de erro do Varnish da propria Loja Integrada. Mesmo o corpo do erro carrega
+cdn.awsli.com.br, que e o CDN da plataforma — da para classificar sem ver a loja.
+"""
+
+
+# ──────────────────── google sites extinto e proprio ─────────────────
+
+[[fixture]]
+arquivo = "google_sites_extinto_404.html"
+origem = "https://barbearia.business.site/"
+http_status = 404
+redirects = 0
+plataforma_esperada = "google_sites_extinto"
+assinatura = ["dominio *.business.site — e so isso"]
+title = "Error 404 (Not Found)!!1"
+viewport_presente = true                     # <meta name=viewport ...> SEM aspas
+meta_description_presente = false
+rastreamento = []
+nota = """
+Resposta do spike S4.
+
+Detalhe que custou uma correcao: a pagina declara o viewport como
+`<meta name=viewport content="...">`, com o atributo `name` SEM aspas. Extracao
+por grep que procure `name="viewport"` responde "sem viewport" e inventa um
+defeito vendavel que nao existe. Parser de arvore nao se importa com aspas. O corpo e o 404 generico do Google, com ZERO informacao
+identificadora: nao ha assinatura de HTML possivel. A regra tem que ser de
+dominio, e tem que ter precedencia sobre `quebrado`, senao um lead T1
+(GOOGLE_SITES_EXTINTO) e rebaixado para SITE_QUEBRADO, que nem faixa T1 tem.
+Detalhe completo em docs/superpowers/specs/2026-09-10-spike-s4-e-armadilhas.md
+"""
+
+[[fixture]]
+arquivo = "proprio_bem_feito.html"
+origem = "https://www.espacolaser.com.br/"
+url_final = "https://espacolaser.com.br/"
+http_status = 200
+redirects = 1
+plataforma_esperada = "proprio"
+assinatura = ["nenhuma assinatura de construtor encontrada"]
+title = "Espaçolaser: Depilação a Laser"
+viewport_presente = true
+meta_description_presente = true
+whatsapp_link = "https://wa.me/+5511974904291"
+whatsapp_telefone_extraivel = true
+email = "imprensa@espacolaser.com.br"
+instagram = "https://instagram.com/espacolaser"
+rastreamento = []
+nota = """
+Caso negativo que da o custo do falso positivo: nenhuma das assinaturas de
+construtor pode disparar aqui. Se disparar, a ferramenta manda o operador ligar
+para quem ja tem site — e queima credibilidade na primeira ligacao.
+
+Nao ha rastreamento no HTML cru apesar de ser rede grande. Nao e defeito do
+detector: e o limite honesto de ler HTML sem executar JavaScript, e precisa
+aparecer como limite conhecido, nao como ausencia de fato.
+"""
+
+
+# ────────────────────────────── lacunas ──────────────────────────────
+#
+# Casos que a secao 12 da spec pede e este conjunto ainda nao cobre:
+#
+#   - `quebrado` por DNS: nao vira fixture de HTML, e comportamento do fetcher.
+#     Verificado ao vivo: salao-que-nao-existe-xyz9271.com.br e
+#     www.neuroaplicativos.com.br -> "Could not resolve host" -> motivo
+#     `dominio_nao_resolve`. Testar com transporte falso, sem rede.
+#   - redirecionamento triplo: idem, comportamento do fetcher. Observado ao vivo
+#     em https://negocio.site/ (3 saltos ate business.google.com).
+#   - `ausente`: e a ausencia de websiteUri no Places, nao existe HTML.
+#   - Google Ads (AW-): NENHUMA das 13 fixtures tem. O detector de `AW-` vai
+#     nascer sem caso positivo real. Lacuna conhecida — e o sinal de maior peso
+#     da faixa T0, entao merece uma fixture assim que aparecer uma na busca real.
+#   - heatmap (hotjar/clarity) e TikTok Pixel: idem, sem caso positivo real.
+#   - Pixel DENTRO de Canva ou Linktree — o caso maximo T0 da secao 6.2. Nenhuma
+#     das 5 paginas de Canva/Linktree inspecionadas tinha. E raro por construcao
+#     (exige plano pago da Linktree), o que ja e um dado sobre o tamanho de T0.

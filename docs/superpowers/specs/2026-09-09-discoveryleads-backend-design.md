@@ -340,7 +340,6 @@ de venda mais forte possível, porque não é opinião do vendedor.
 |---|---|---|
 | `site.plataforma` | enum acima | **elegibilidade**, ver 6.1 |
 | `site.http_status` | int | site quebrado |
-
 | `site.redirects` | int | |
 | `site.tempo_resposta_ms` | int | argumento de venda |
 | `site.https_valido` | bool | argumento de venda |

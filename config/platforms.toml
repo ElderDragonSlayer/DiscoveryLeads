@@ -1,0 +1,58 @@
+# Assinaturas de plataforma — `site.plataforma`, secao 5 da spec.
+#
+# Fica fora do codigo de proposito: e o arquivo que o operador ajusta sozinho
+# quando uma plataforma muda de marcador, sem reprogramar nada.
+#
+# A ORDEM DAS SECOES E A ORDEM DE PRECEDENCIA. Duas passagens:
+#
+#   1. `dominios` de todas as secoes, de cima para baixo
+#   2. `assinaturas` de todas as secoes, de cima para baixo
+#   3. so entao o status HTTP decide `quebrado`
+#
+# Dominio antes de assinatura, e as duas antes do status, porque e isso que
+# mantem na lista o lead cujo servidor respondeu 404 ou 403. Trocar a ordem
+# rebaixa lead T1 para SITE_QUEBRADO, que nao tem faixa nenhuma na secao 6.2.
+# Os testes test_google_sites_extinto_vence_o_status_404 e o caso 403 da Loja
+# Integrada existem para travar isso.
+#
+# Cada assinatura abaixo foi confirmada em HTML real — a contagem de ocorrencias
+# esta em tests/fixtures/sites/MANIFESTO.toml.
+
+[google_sites_extinto]
+# Spike S4: encerrado em marco de 2024. Subdominio devolve 404 com o corpo
+# generico do Google. Nao existe assinatura de HTML possivel — so o dominio.
+dominios = ["negocio.site", "business.site"]
+assinaturas = []
+
+[agregador]
+dominios = ["linktr.ee", "beacons.ai", "bio.link", "linkbio.co"]
+assinaturas = ["assets.production.linktr.ee"]
+
+[canva]
+# __canva_website_bootstrap__ e o unico marcador presente nas DUAS variantes de
+# export do Canva. A variante antiga traz tambem
+# <meta name="app-name" content="export_website">; a nova nao traz. Um
+# classificador construido em cima de uma pagina so teria escolhido o app-name e
+# classificaria a variante nova como `proprio`.
+dominios = ["my.canva.site"]
+assinaturas = ["__canva_website_bootstrap__"]
+
+[wix]
+dominios = ["wixsite.com"]
+assinaturas = ["static.parastorage.com"]
+
+[shopify]
+dominios = ["myshopify.com"]
+assinaturas = ["cdn.shopify.com"]
+
+[loja_integrada]
+dominios = ["lojaintegrada.com.br"]
+assinaturas = ["cdn.awsli.com.br"]
+
+[wordpress]
+# Sem dominio proprio da plataforma: WordPress auto-hospedado mora em qualquer
+# lugar. Fica por ultimo porque /wp-content/ e o marcador mais generico do
+# conjunto, e o unico com risco real de aparecer de emprestimo numa pagina que
+# apenas referencia um arquivo hospedado em WordPress alheio.
+dominios = []
+assinaturas = ["/wp-content/", "/wp-includes/"]

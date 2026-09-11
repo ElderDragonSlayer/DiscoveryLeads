@@ -1,0 +1,35 @@
+[project]
+name = "discoveryleads"
+version = "0.1.0"
+description = "Ferramenta interna da Vertex Solutions para encontrar leads que precisam de uma landing page"
+requires-python = ">=3.13"
+
+dependencies = [
+    "httpx>=0.27",
+    "selectolax>=0.3.21",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "respx>=0.21",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+# A rede nunca entra no ciclo normal. Teste que bate em API de verdade leva
+# @pytest.mark.live e fica de fora por padrao — roda com `-m live`.
+addopts = "-m 'not live'"
+markers = [
+    "live: bate na rede de verdade; roda sob demanda, nunca no ciclo normal",
+]
