@@ -15,7 +15,9 @@ from discoveryleads.collectors.site_classifier import classificar_resposta
 from discoveryleads.collectors.site_extracao import extrair_sinais
 from discoveryleads.collectors.site_fetcher import RespostaDoSite, buscar_site
 from discoveryleads.collectors.tracking_detector import detectar_rastreamento
+from discoveryleads.core.configuracao import carregar
 from discoveryleads.core.falhas import MotivoDeFalha
+from discoveryleads.core.normalizacao import dominio_casa, dominio_de
 from discoveryleads.core.sinais import Signal
 
 VERSAO = 1
@@ -101,12 +103,37 @@ def sinais_da_resposta(
     return sinais
 
 
+def perfil_no_lugar_do_site(url: str) -> str | None:
+    """O que o endereco e, quando ele esta no campo "site" do Google sem ser
+    site: perfil de rede social, conversa de WhatsApp, pagina de agendamento.
+    Lista em config/perfis.toml."""
+    dominio = dominio_de(url)
+    for alvo, descricao in carregar("perfis.toml")["perfis"].items():
+        if dominio_casa(dominio, alvo):
+            return descricao
+    return None
+
+
 async def analisar_site(
     url: str,
     *,
     observado_em: str,
     buscar: Callable[[str], Awaitable[RespostaDoSite]] = buscar_site,
 ) -> list[Signal]:
+    perfil = perfil_no_lugar_do_site(url)
+    if perfil is not None:
+        # Nao busca: o dominio ja diz o que e, e buscar perfil do Instagram do IP
+        # de casa e o risco da secao 14 da spec.
+        return [
+            Signal(
+                tipo="site.perfil_no_lugar_do_site",
+                valor=perfil,
+                fonte="site",
+                coletor="site_classifier",
+                versao=VERSAO,
+                observado_em=observado_em,
+            )
+        ]
     try:
         resposta = await buscar(url)
     except Exception:  # buscar_site nao levanta; um buscador injetado pode

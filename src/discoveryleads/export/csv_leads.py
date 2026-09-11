@@ -84,6 +84,9 @@ def _limites(sinais: dict[str, Signal]) -> str:
 def _rastreamento(sinais: dict[str, Signal]) -> str:
     if _valor(sinais, "places.sem_site") is True:
         return "sem site"
+    perfil = _valor(sinais, "site.perfil_no_lugar_do_site")
+    if perfil:
+        return f"sem site: {perfil}"
     if not any(f"tracking.{nome}" in sinais for nome in SINAIS_DE_RASTREAMENTO):
         falha = _valor(sinais, "collector.site_fetcher.failed")
         return f"site não lido ({falha})" if falha else "site não lido"
@@ -121,6 +124,13 @@ def _link_do_maps(nome: str, place_id: str) -> str:
     )
 
 
+def _plataforma(sinais: dict[str, Signal]) -> str:
+    plataforma = _valor(sinais, "site.plataforma")
+    if plataforma:
+        return str(plataforma)
+    return "perfil" if _valor(sinais, "site.perfil_no_lugar_do_site") else "desconhecida"
+
+
 def linha_csv(
     *,
     nome: str,
@@ -143,7 +153,7 @@ def linha_csv(
         "motivo": elegibilidade.motivo,
         "evidencia": " | ".join(formatar_evidencia(sinal, fuso) for sinal in evidencias),
         "limites": _limites(sinais),
-        "plataforma": str(_valor(sinais, "site.plataforma") or "desconhecida"),
+        "plataforma": _plataforma(sinais),
         "url": str(_valor(sinais, "site.url_final") or _valor(sinais, "places.website_uri") or ""),
         "rastreamento": _rastreamento(sinais),
         "avaliacoes": str(_valor(sinais, "places.avaliacoes_total") or 0),

@@ -37,6 +37,8 @@ class Categoria(str, Enum):
     GOOGLE_SITES_EXTINTO = "GOOGLE_SITES_EXTINTO"
     SITE_QUEBRADO = "SITE_QUEBRADO"
     SUBDOMINIO_GRATIS = "SUBDOMINIO_GRATIS"
+    # Instagram, WhatsApp ou agendamento no campo "site" (primeira busca real)
+    PERFIL_NO_LUGAR_DO_SITE = "PERFIL_NO_LUGAR_DO_SITE"
     # inelegiveis
     TEM_SITE_PROPRIO = "TEM_SITE_PROPRIO"
     FECHADO = "FECHADO"
@@ -54,6 +56,7 @@ ELEGIVEIS = frozenset(
         Categoria.GOOGLE_SITES_EXTINTO,
         Categoria.SITE_QUEBRADO,
         Categoria.SUBDOMINIO_GRATIS,
+        Categoria.PERFIL_NO_LUGAR_DO_SITE,
     }
 )
 
@@ -79,8 +82,14 @@ def _presentes(sinais: dict[str, Signal], *tipos: str) -> tuple[Signal, ...]:
 
 
 def _endereco_curto(url: str) -> str:
-    """"https://www.linktr.ee/Fascino/" -> "linktr.ee/Fascino"."""
-    return url.split("://", 1)[-1].removeprefix("www.").rstrip("/")
+    """"https://www.linktr.ee/Fascino/?utm_source=x" -> "linktr.ee/Fascino".
+
+    Parametro de rastreio nao diz nada ao operador e empurra o resto do motivo
+    para fora da celula.
+    """
+    sem_esquema = url.split("://", 1)[-1]
+    sem_parametros = sem_esquema.split("?", 1)[0].split("#", 1)[0]
+    return sem_parametros.removeprefix("www.").rstrip("/")
 
 
 def _e_quebra(status: object) -> bool:
@@ -133,6 +142,15 @@ def avaliar_elegibilidade(
             Categoria.SEM_SITE,
             "elegível — não tem site no Google",
             _presentes(sinais, "places.sem_site"),
+        )
+
+    perfil = _valor(sinais, "site.perfil_no_lugar_do_site")
+    if perfil:
+        onde = _endereco_curto(str(_valor(sinais, "places.website_uri") or ""))
+        return Elegibilidade(
+            Categoria.PERFIL_NO_LUGAR_DO_SITE,
+            f"elegível — o site no Google é {perfil} ({onde})",
+            _presentes(sinais, "site.perfil_no_lugar_do_site", "places.website_uri"),
         )
 
     url = _valor(sinais, "site.url_final") or _valor(sinais, "places.website_uri") or ""

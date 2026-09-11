@@ -11,7 +11,7 @@ from discoveryleads.scoring.elegibilidade import Categoria, Elegibilidade
 
 # "Ja foi convencido de que precisa de presenca digital e escolheu a solucao
 # pobre" (secao 6.2) — mais SITE_QUEBRADO e SUBDOMINIO_GRATIS (decisoes de
-# 2026-09-11).
+# 2026-09-11) e PERFIL_NO_LUGAR_DO_SITE (achado da primeira busca real).
 SUBSTITUTO_IMPROVISADO = frozenset(
     {
         Categoria.CANVA,
@@ -19,6 +19,7 @@ SUBSTITUTO_IMPROVISADO = frozenset(
         Categoria.GOOGLE_SITES_EXTINTO,
         Categoria.SITE_QUEBRADO,
         Categoria.SUBDOMINIO_GRATIS,
+        Categoria.PERFIL_NO_LUGAR_DO_SITE,
     }
 )
 
