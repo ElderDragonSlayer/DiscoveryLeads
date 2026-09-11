@@ -18,12 +18,16 @@ sem site, ou com página feita no Canva, ou com Linktree, ou com Google Sites ex
 completo, 16 seções. Contém taxonomia de sinais, modelo de dados, regras de
 pontuação e o dossiê de abordagem. **Não reprojete nada sem ler.**
 
-## Estado atual (2026-09-10)
+## Estado atual (2026-09-11)
 
 - Spec aprovada. Plano da fatia: `docs/superpowers/specs/2026-09-10-fatia-dia-1.md`
-- **Peça 1 da Fatia Dia 1 pronta**, com 50 testes passando:
+- **Peça 1 da Fatia Dia 1 pronta e commitada**, com 78 testes passando:
   `site_fetcher` + `site_classifier` + `site_extracao` + `tracking_detector`.
-- Próximo: peça 2 (`places_discovery`), que já pode andar — a chave existe.
+- **Interface adiada** (2026-09-11): o operador recebe os leads pelo CSV até a
+  E7. As regras de tela da spec valem no CSV — ver a emenda da peça 4 e a seção
+  "Interface — adiada", com os pedidos para a E7, no plano da fatia.
+- Próximo: plano de implementação das peças 2, 3 e 4. A peça 2
+  (`places_discovery`) já pode andar — a chave existe.
 
 ### Ambiente
 
