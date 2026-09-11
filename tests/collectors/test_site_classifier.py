@@ -114,3 +114,12 @@ def test_agregador_atras_de_anti_bot_continua_agregador():
         )
         is Plataforma.AGREGADOR
     )
+
+
+def test_bloqueio_sem_pista_de_plataforma_nao_e_quebrado():
+    """O corpo da fixture da Beacons e o desafio do Cloudflare. Num dominio que
+    nao diz nada, a resposta honesta e "nao sei". `quebrado` mandaria o
+    operador ligar para quem tem site funcionando."""
+    html = carregar_fixture("agregador_beacons_bloqueado_403.html")
+
+    assert classificar_plataforma("https://salaodaana.com.br/", html, http_status=403) is None
